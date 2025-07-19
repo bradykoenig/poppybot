@@ -6,28 +6,24 @@ const {
   StringSelectMenuBuilder,
   PermissionsBitField,
 } = require("discord.js");
-const fetch = require("node-fetch");
 require("dotenv").config();
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
   presence: {
-    status: 'online',
+    status: "online",
     activities: [
       {
-        name: 'you poop 💩',
-        type: 3 // 3 = "WATCHING"
-      }
-    ]
-  }
+        name: "you poop 💩",
+        type: 3, // WATCHING
+      },
+    ],
+  },
 });
-
 
 client.once("ready", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
-  // Don't overwrite presence again here
 });
-
 
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand() && !interaction.isStringSelectMenu())
@@ -43,7 +39,7 @@ client.on("interactionCreate", async (interaction) => {
     if (commandName === "quote") {
       try {
         const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/getQuotes",
+          "https://us-central1-poppy-d5573.cloudfunctions.net/getQuotes"
         );
         const quotes = await res.json();
         const random = quotes[Math.floor(Math.random() * quotes.length)];
@@ -64,7 +60,7 @@ client.on("interactionCreate", async (interaction) => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ quote, author, discordId: user.id }),
-          },
+          }
         );
 
         if (!res.ok) throw new Error("Failed to save quote");
@@ -87,10 +83,10 @@ client.on("interactionCreate", async (interaction) => {
               quote,
               discordId: user.id,
               isAdmin: member.permissions.has(
-                PermissionsBitField.Flags.Administrator,
+                PermissionsBitField.Flags.Administrator
               ),
             }),
-          },
+          }
         );
 
         const result = await res.json();
@@ -106,12 +102,12 @@ client.on("interactionCreate", async (interaction) => {
     if (commandName === "wheel") {
       try {
         const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/getGames",
+          "https://us-central1-poppy-d5573.cloudfunctions.net/getGames"
         );
         const games = await res.json();
         const choice = games[Math.floor(Math.random() * games.length)];
         return interaction.reply(
-          `🎡 The Game Wheel landed on: **${choice.name}**`,
+          `🎡 The Game Wheel landed on: **${choice.name}**`
         );
       } catch {
         return interaction.reply("❌ Failed to spin the wheel.");
@@ -121,7 +117,7 @@ client.on("interactionCreate", async (interaction) => {
     if (commandName === "avatar") {
       try {
         const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/getAvatars",
+          "https://us-central1-poppy-d5573.cloudfunctions.net/getAvatars"
         );
         const avatars = await res.json();
         const match = avatars.find((e) => e.discordId === user.id);
@@ -143,7 +139,7 @@ client.on("interactionCreate", async (interaction) => {
     if (commandName === "media") {
       try {
         const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/getMedia",
+          "https://us-central1-poppy-d5573.cloudfunctions.net/getMedia"
         );
         const media = await res.json();
 
@@ -151,7 +147,9 @@ client.on("interactionCreate", async (interaction) => {
           return interaction.reply("No media uploaded yet.");
 
         const options = media.slice(0, 25).map((entry) => ({
-          label: `${entry.type === "video" ? "🎥" : "🖼"} ${entry.url.split("/").pop().slice(0, 30)}`,
+          label: `${
+            entry.type === "video" ? "🎥" : "🖼"
+          } ${entry.url.split("/").pop().slice(0, 30)}`,
           value: entry.url,
         }));
 
@@ -195,25 +193,17 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // Media dropdown handler
   if (
     interaction.isStringSelectMenu() &&
     interaction.customId === "media_select"
   ) {
     await interaction.channel.send(
-      `📸 Selected media:\n${interaction.values[0]}`,
+      `📸 Selected media:\n${interaction.values[0]}`
     );
     await interaction.update({
       content: "✅ Media sent to chat.",
       components: [],
     });
-  }
-});
-
-// Legacy message listener (forces presence visibility)
-client.on("messageCreate", (message) => {
-  if (message.content === "!poop") {
-    message.reply("💩 Status check: Pooper Patrol is watching!");
   }
 });
 
