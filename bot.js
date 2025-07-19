@@ -15,7 +15,7 @@ const client = new Client({
     status: 'online',
     activities: [
       {
-        name: 'you take a dump 💩',
+        name: 'you poop 💩',
         type: 3 // 3 = "WATCHING"
       }
     ]
