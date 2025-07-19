@@ -1,4 +1,5 @@
 require("./keep_alive");
+require("dotenv").config();
 const {
   Client,
   GatewayIntentBits,
@@ -6,7 +7,9 @@ const {
   StringSelectMenuBuilder,
   PermissionsBitField,
 } = require("discord.js");
-require("dotenv").config();
+
+// Node.js native fetch (v18+)
+const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -14,7 +17,7 @@ const client = new Client({
     status: "online",
     activities: [
       {
-        name: "you poop 💩",
+        name: "you take a dump 💩",
         type: 3, // WATCHING
       },
     ],
@@ -44,7 +47,8 @@ client.on("interactionCreate", async (interaction) => {
         const quotes = await res.json();
         const random = quotes[Math.floor(Math.random() * quotes.length)];
         return interaction.reply(`💬 "${random.quote}" — ${random.author}`);
-      } catch {
+      } catch (err) {
+        console.error(err);
         return interaction.reply("❌ Failed to load quote.");
       }
     }
@@ -65,7 +69,8 @@ client.on("interactionCreate", async (interaction) => {
 
         if (!res.ok) throw new Error("Failed to save quote");
         return interaction.reply(`✅ Quote added: "${quote}" — ${author}`);
-      } catch {
+      } catch (err) {
+        console.error(err);
         return interaction.reply("❌ Failed to save quote.");
       }
     }
@@ -95,6 +100,7 @@ client.on("interactionCreate", async (interaction) => {
 
         return interaction.reply(`🗑️ Quote removed: "${quote}"`);
       } catch (err) {
+        console.error(err);
         return interaction.reply(`❌ ${err.message}`);
       }
     }
@@ -109,7 +115,8 @@ client.on("interactionCreate", async (interaction) => {
         return interaction.reply(
           `🎡 The Game Wheel landed on: **${choice.name}**`
         );
-      } catch {
+      } catch (err) {
+        console.error(err);
         return interaction.reply("❌ Failed to spin the wheel.");
       }
     }
@@ -131,7 +138,8 @@ client.on("interactionCreate", async (interaction) => {
         if (match.minecraftUsername)
           response += `⛏ Minecraft: ${match.minecraftUsername}`;
         return interaction.reply(response);
-      } catch {
+      } catch (err) {
+        console.error(err);
         return interaction.reply("❌ Couldn't fetch avatars.");
       }
     }
@@ -165,7 +173,8 @@ client.on("interactionCreate", async (interaction) => {
           components: [row],
           ephemeral: true,
         });
-      } catch {
+      } catch (err) {
+        console.error(err);
         return interaction.reply("❌ Couldn't load media.");
       }
     }
@@ -187,7 +196,8 @@ client.on("interactionCreate", async (interaction) => {
           content: "✅ Announcement sent.",
           ephemeral: true,
         });
-      } catch {
+      } catch (err) {
+        console.error(err);
         return interaction.reply("❌ Failed to send announcement.");
       }
     }
