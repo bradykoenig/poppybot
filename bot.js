@@ -10,17 +10,18 @@ const fetch = require("node-fetch");
 require("dotenv").config();
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildPresences,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+  intents: [GatewayIntentBits.Guilds],
   presence: {
-    activities: [{ name: "you poop 💩", type: "WATCHING" }],
-    status: "online",
-  },
+    status: 'online',
+    activities: [
+      {
+        name: 'you poop 💩',
+        type: 3 // 3 = "WATCHING"
+      }
+    ]
+  }
 });
+
 
 client.once("ready", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
