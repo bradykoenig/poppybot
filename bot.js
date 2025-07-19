@@ -25,14 +25,9 @@ const client = new Client({
 
 client.once("ready", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
-
-  // Force presence update every 15 seconds
-  setInterval(() => {
-    if (client.user) {
-      client.user.setActivity("you poop 💩", { type: "WATCHING" });
-    }
-  }, 15000);
+  // Don't overwrite presence again here
 });
+
 
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand() && !interaction.isStringSelectMenu())
