@@ -8,7 +8,7 @@ const {
   PermissionsBitField,
 } = require("discord.js");
 
-// Node.js native fetch (v18+)
+// Native fetch support (Node 18+)
 const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
 
 const client = new Client({
@@ -29,11 +29,11 @@ client.once("ready", () => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand() && !interaction.isStringSelectMenu())
-    return;
+  if (!interaction.isChatInputCommand() && !interaction.isStringSelectMenu()) return;
 
   const { commandName, user, member } = interaction;
 
+  // Slash commands
   if (interaction.isChatInputCommand()) {
     if (commandName === "poop") {
       return interaction.reply("💩 Pooper Patrol on duty!");
@@ -41,12 +41,10 @@ client.on("interactionCreate", async (interaction) => {
 
     if (commandName === "quote") {
       try {
-        const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/getQuotes"
-        );
+        const res = await fetch("https://us-central1-poppy-d5573.cloudfunctions.net/getQuotes");
         const quotes = await res.json();
         const random = quotes[Math.floor(Math.random() * quotes.length)];
-        return interaction.reply(`💬 "${random.quote}" — ${random.author}`);
+        return interaction.reply(`💬 "${random.quote}" — ${random.discordTag}`);
       } catch (err) {
         console.error(err);
         return interaction.reply("❌ Failed to load quote.");
@@ -55,20 +53,20 @@ client.on("interactionCreate", async (interaction) => {
 
     if (commandName === "addquote") {
       const quote = interaction.options.getString("quote");
-      const author = interaction.options.getString("author") || user.username;
 
       try {
-        const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/addQuote",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quote, author, discordId: user.id }),
-          }
-        );
+        const res = await fetch("https://us-central1-poppy-d5573.cloudfunctions.net/saveQuote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            quote,
+            discordId: user.id,
+            discordTag: `${user.username}#${user.discriminator}`,
+          }),
+        });
 
         if (!res.ok) throw new Error("Failed to save quote");
-        return interaction.reply(`✅ Quote added: "${quote}" — ${author}`);
+        return interaction.reply(`✅ Quote saved: "${quote}"`);
       } catch (err) {
         console.error(err);
         return interaction.reply("❌ Failed to save quote.");
@@ -76,29 +74,19 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     if (commandName === "removequote") {
-      const quote = interaction.options.getString("quote");
+      const id = interaction.options.getString("id");
 
       try {
-        const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/removeQuote",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              quote,
-              discordId: user.id,
-              isAdmin: member.permissions.has(
-                PermissionsBitField.Flags.Administrator
-              ),
-            }),
-          }
-        );
+        const res = await fetch("https://us-central1-poppy-d5573.cloudfunctions.net/deleteQuote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
 
         const result = await res.json();
-        if (!res.ok)
-          throw new Error(result.message || "Failed to delete quote");
+        if (!res.ok) throw new Error(result.message || "Failed to delete");
 
-        return interaction.reply(`🗑️ Quote removed: "${quote}"`);
+        return interaction.reply(`🗑️ Quote deleted.`);
       } catch (err) {
         console.error(err);
         return interaction.reply(`❌ ${err.message}`);
@@ -107,14 +95,10 @@ client.on("interactionCreate", async (interaction) => {
 
     if (commandName === "wheel") {
       try {
-        const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/getGames"
-        );
+        const res = await fetch("https://us-central1-poppy-d5573.cloudfunctions.net/getGames");
         const games = await res.json();
         const choice = games[Math.floor(Math.random() * games.length)];
-        return interaction.reply(
-          `🎡 The Game Wheel landed on: **${choice.name}**`
-        );
+        return interaction.reply(`🎡 The Game Wheel landed on: **${choice.name}**`);
       } catch (err) {
         console.error(err);
         return interaction.reply("❌ Failed to spin the wheel.");
@@ -123,20 +107,15 @@ client.on("interactionCreate", async (interaction) => {
 
     if (commandName === "avatar") {
       try {
-        const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/getAvatars"
-        );
+        const res = await fetch("https://us-central1-poppy-d5573.cloudfunctions.net/getAvatars");
         const avatars = await res.json();
         const match = avatars.find((e) => e.discordId === user.id);
 
-        if (!match)
-          return interaction.reply("😕 You haven't submitted any avatars.");
+        if (!match) return interaction.reply("😕 You haven't submitted any avatars.");
 
         let response = `🎭 **Avatars for ${user.username}**\n`;
-        if (match.robloxUsername)
-          response += `🕹 Roblox: ${match.robloxUsername}\n`;
-        if (match.minecraftUsername)
-          response += `⛏ Minecraft: ${match.minecraftUsername}`;
+        if (match.robloxUsername) response += `🕹 Roblox: ${match.robloxUsername}\n`;
+        if (match.minecraftUsername) response += `⛏ Minecraft: ${match.minecraftUsername}`;
         return interaction.reply(response);
       } catch (err) {
         console.error(err);
@@ -146,18 +125,13 @@ client.on("interactionCreate", async (interaction) => {
 
     if (commandName === "media") {
       try {
-        const res = await fetch(
-          "https://us-central1-poppy-d5573.cloudfunctions.net/getMedia"
-        );
+        const res = await fetch("https://us-central1-poppy-d5573.cloudfunctions.net/getMedia");
         const media = await res.json();
 
-        if (!media || media.length === 0)
-          return interaction.reply("No media uploaded yet.");
+        if (!media || media.length === 0) return interaction.reply("No media uploaded yet.");
 
         const options = media.slice(0, 25).map((entry) => ({
-          label: `${
-            entry.type === "video" ? "🎥" : "🖼"
-          } ${entry.url.split("/").pop().slice(0, 30)}`,
+          label: `${entry.type === "video" ? "🎥" : "🖼"} ${entry.url.split("/").pop().slice(0, 30)}`,
           value: entry.url,
         }));
 
@@ -188,14 +162,10 @@ client.on("interactionCreate", async (interaction) => {
       }
 
       const message = interaction.options.getString("message");
-      const channel = interaction.channel;
 
       try {
-        await channel.send(`📢 **Announcement:** ${message}`);
-        return interaction.reply({
-          content: "✅ Announcement sent.",
-          ephemeral: true,
-        });
+        await interaction.channel.send(`📢 **Announcement:** ${message}`);
+        return interaction.reply({ content: "✅ Announcement sent.", ephemeral: true });
       } catch (err) {
         console.error(err);
         return interaction.reply("❌ Failed to send announcement.");
@@ -203,17 +173,9 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  if (
-    interaction.isStringSelectMenu() &&
-    interaction.customId === "media_select"
-  ) {
-    await interaction.channel.send(
-      `📸 Selected media:\n${interaction.values[0]}`
-    );
-    await interaction.update({
-      content: "✅ Media sent to chat.",
-      components: [],
-    });
+  if (interaction.isStringSelectMenu() && interaction.customId === "media_select") {
+    await interaction.channel.send(`📸 Selected media:\n${interaction.values[0]}`);
+    await interaction.update({ content: "✅ Media sent to chat.", components: [] });
   }
 });
 
